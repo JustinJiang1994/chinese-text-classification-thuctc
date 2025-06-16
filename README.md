@@ -96,7 +96,7 @@
 
 ## 项目概述
 
-本项目基于中文新闻数据集实现多分类任务，使用多种机器学习算法进行文本分类，并比较不同模型的效果。
+本项目基于中文新闻数据集实现多分类任务，使用多种机器学习算法进行文本分类，并比较不同模型的效果。项目包含传统机器学习方法（朴素贝叶斯、SVM、逻辑回归、随机森林）和深度学习方法（LSTM）。
 
 ## 项目结构
 
@@ -113,17 +113,20 @@ news_classifier/
 │   ├── society_news.csv     # 社会新闻
 │   ├── sports_news.csv      # 体育新闻
 │   ├── technology_news.csv  # 科技新闻
+│   ├── news_data.csv        # 合并后的新闻数据
 │   └── stopwords.txt        # 停用词表
 ├── src/                     # 源代码
 │   ├── naive_bayes_classifier.py # 朴素贝叶斯分类器
 │   ├── svm_classifier.py    # SVM分类器
 │   ├── logistic_regression_classifier.py # 逻辑回归分类器
-│   └── random_forest_classifier.py # 随机森林分类器
+│   ├── random_forest_classifier.py # 随机森林分类器
+│   └── lstm_classifier.py   # LSTM分类器
 ├── models/                  # 训练好的模型
 │   ├── naive_bayes_model.pkl
 │   ├── svm_model.pkl
 │   ├── logistic_regression_model.pkl
-│   └── random_forest_model.pkl
+│   ├── random_forest_model.pkl
+│   └── lstm_model.pkl
 ├── results/                 # 结果文件
 │   ├── naive_bayes_results.txt
 │   ├── naive_bayes_confusion_matrix.png
@@ -133,15 +136,22 @@ news_classifier/
 │   ├── logistic_regression_confusion_matrix.png
 │   ├── random_forest_results.txt
 │   ├── random_forest_confusion_matrix.png
-│   └── random_forest_feature_importance.png
+│   ├── random_forest_feature_importance.png
+│   ├── lstm_results.pkl
+│   ├── lstm_training_history.png
+│   ├── lstm_confusion_matrix.png
+│   └── lstm_detailed_results.txt
 ├── utils/                   # 工具脚本
 │   └── analyze_data.py      # 数据分析脚本
 ├── run_naive_bayes.py       # 运行朴素贝叶斯分类器
 ├── run_svm.py              # 运行SVM分类器
 ├── run_logistic_regression.py # 运行逻辑回归分类器
 ├── run_random_forest.py    # 运行随机森林分类器
+├── run_lstm.py             # 运行LSTM分类器
 ├── test_naive_bayes.py      # 测试朴素贝叶斯分类器
 ├── test_svm.py             # 测试SVM分类器
+├── test_lstm.py            # 测试LSTM分类器
+├── merge_data.py           # 数据合并脚本
 └── requirements.txt         # 项目依赖
 ```
 
@@ -155,6 +165,46 @@ news_classifier/
 | 朴素贝叶斯 | 68.34% | 68.18% | 68.18% | 67.78% (±0.31%) | 14秒 |
 | SVM | 67.42% | 67.77% | 67.77% | 66.48% (±0.93%) | 79秒 |
 | 随机森林 | 62.07% | 61.91% | 61.91% | 61.74% (±0.79%) | 45秒 |
+| LSTM | 待训练 | 待训练 | 待训练 | 待训练 | 待训练 |
+
+### LSTM分类器结果
+
+#### 模型配置
+- **算法**: 双向LSTM (Bidirectional LSTM)
+- **架构**: Embedding → Bidirectional LSTM → Dropout → Bidirectional LSTM → Dense → Dropout → Dense
+- **特征提取**: Keras Tokenizer + 序列填充
+- **文本预处理**: jieba分词 + 停用词过滤
+- **数据**: 全量数据 (800,652条记录)
+- **训练/验证/测试比例**: 64:16:20
+- **类别权重**: 自动计算平衡权重
+
+#### 模型参数
+- **词汇表大小**: 10,000
+- **序列最大长度**: 200
+- **词嵌入维度**: 128
+- **LSTM单元数**: 128
+- **Dropout率**: 0.3
+- **优化器**: Adam
+- **损失函数**: Categorical Crossentropy
+
+#### 类别权重（处理数据不平衡）
+| 类别 | 权重 | 样本数 |
+|------|------|--------|
+| 科技 | 6.8385 | 25,482 |
+| 社会 | 2.0521 | 275,316 |
+| 财经 | 0.5611 | 145,188 |
+| 体育 | 0.4982 | 33,046 |
+| 军事 | 5.2109 | 17,225 |
+| 国际 | 0.8974 | 89,805 |
+| 家居 | 4.7975 | 165,103 |
+| 房产 | 0.2991 | 15,619 |
+| 汽车 | 2.4580 | 11,959 |
+| 娱乐 | 3.2041 | 40,201 |
+
+#### 数据不平衡处理策略
+- **类别权重**: 使用sklearn的`compute_class_weight`自动计算平衡权重
+- **权重分配**: 样本少的类别获得更高权重，样本多的类别获得较低权重
+- **训练策略**: 在模型训练时应用类别权重，提升对小类别的关注度
 
 ### 逻辑回归分类器结果
 
@@ -262,6 +312,7 @@ news_classifier/
 2. **朴素贝叶斯**: 68.34%
 3. **SVM**: 67.42%
 4. **随机森林**: 62.07%
+5. **LSTM**: 待训练完成
 
 ### 各类别表现分析
 
@@ -297,6 +348,12 @@ news_classifier/
    - 提供了特征重要性分析
    - 适合需要模型解释的场景
 
+5. **LSTM**: 
+   - 深度学习模型，能够捕捉序列信息
+   - 使用类别权重处理数据不平衡问题
+   - 支持全量数据训练，不进行采样
+   - 适合处理长文本和复杂语义
+
 ### 特征重要性分析（随机森林）
 随机森林模型提供了特征重要性分析，可以帮助理解哪些词汇对分类最重要。主要重要特征包括：
 - 各类别的专业术语
@@ -308,6 +365,12 @@ news_classifier/
 ### 环境配置
 ```bash
 pip install -r requirements.txt
+```
+
+### 数据准备
+```bash
+# 合并数据文件
+python merge_data.py
 ```
 
 ### 运行各种分类器
@@ -323,12 +386,16 @@ python run_logistic_regression.py
 
 # 随机森林
 python run_random_forest.py
+
+# LSTM
+python run_lstm.py
 ```
 
 ### 测试模型
 ```bash
 python test_naive_bayes.py
 python test_svm.py
+python test_lstm.py
 ```
 
 ## 依赖包
@@ -338,10 +405,22 @@ python test_svm.py
 - jieba>=0.42.1
 - matplotlib>=3.5.0
 - seaborn>=0.11.0
+- tensorflow>=2.8.0
+- keras>=2.8.0
+
+## 数据不平衡处理
+
+本项目针对严重的数据不平衡问题（最大类别与最小类别比例为22.86:1）采用了以下策略：
+
+1. **传统机器学习方法**: 使用`class_weight='balanced'`参数
+2. **深度学习方法**: 自动计算类别权重，样本少的类别获得更高权重
+3. **评估指标**: 重点关注F1-score、召回率等指标，而非仅关注准确率
 
 ## 后续计划
-- 尝试深度学习模型（LSTM、CNN、BERT等）
+- 完成LSTM模型训练和评估
+- 尝试其他深度学习模型（CNN、BERT、Transformer等）
 - 进行超参数调优
 - 实现模型集成方法
 - 对比分析不同模型的效果
-- 添加更多评估指标和可视化 
+- 添加更多评估指标和可视化
+- 探索数据增强技术 

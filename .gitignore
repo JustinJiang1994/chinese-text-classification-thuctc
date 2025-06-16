@@ -1,1 +1,23 @@
-models/*.pkl 
+# 模型文件
+models/*.pkl
+
+# 大文件
+data/news_data.csv
+data/*_news.csv
+
+# Python缓存
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# 结果文件
+results/*.png
+results/*.pkl
+results/*.txt
+
+# 系统文件
+.DS_Store
+Thumbs.db 
