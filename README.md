@@ -423,4 +423,139 @@ python test_lstm.py
 - 实现模型集成方法
 - 对比分析不同模型的效果
 - 添加更多评估指标和可视化
-- 探索数据增强技术 
+- 探索数据增强技术
+
+# 中文新闻分类器
+
+基于机器学习和深度学习的中文新闻分类系统，支持10个新闻类别的自动分类。
+
+## 项目概述
+
+本项目实现了多种机器学习算法和深度学习模型来对中文新闻进行分类，包括：
+- 朴素贝叶斯分类器
+- 支持向量机 (SVM)
+- 逻辑回归分类器
+- 随机森林分类器
+- LSTM深度学习分类器
+- **BERT预训练模型分类器** (新增)
+
+## 第一阶段实施进度
+
+### ✅ 第一步：BERT特征提取 (已完成)
+
+#### 实现内容
+- **BERT分类器**: 创建了基于预训练BERT模型的新闻分类器
+- **模型选择**: 使用 `hfl/chinese-roberta-wwm-ext` 中文预训练模型
+- **特征提取**: 实现了BERT特征提取功能，使用[CLS]标记输出作为句子表示
+- **数据处理**: 支持数据平衡和类别权重计算
+- **训练流程**: 完整的训练、评估、保存流程
+
+#### 技术特点
+- **预训练模型**: 使用专门针对中文优化的RoBERTa模型
+- **序列长度**: 最大512个token，适合长文本处理
+- **类别权重**: 自动计算平衡权重，处理数据不平衡问题
+- **批处理**: 支持批量训练和预测，提高效率
+- **模型保存**: 支持模型和tokenizer的完整保存
+
+#### 文件结构
+```
+src/bert_classifier.py    # BERT分类器核心实现
+run_bert.py              # BERT分类器运行脚本
+requirements.txt         # 更新了依赖包
+```
+
+#### 依赖包更新
+- `transformers>=4.20.0` - Hugging Face transformers库
+- `torch>=1.12.0` - PyTorch深度学习框架
+- `datasets>=2.0.0` - 数据集处理
+- `accelerate>=0.12.0` - 加速训练
+- `nlpaug>=1.1.11` - 数据增强
+- `imbalanced-learn>=0.9.0` - 不平衡数据处理
+
+#### 使用方法
+```bash
+# 安装依赖
+pip install -r requirements.txt
+
+# 运行BERT分类器
+python run_bert.py
+```
+
+#### 预期效果
+- **F1分数提升**: 预计比传统方法提升15-20%
+- **特征质量**: BERT特征比TF-IDF特征更丰富，能捕捉语义信息
+- **处理能力**: 能更好地处理长文本和复杂语义
+
+---
+
+## 数据不平衡处理
+
+本项目针对严重的数据不平衡问题（最大类别与最小类别比例为22.86:1）采用了以下策略：
+
+1. **传统机器学习方法**: 使用`class_weight='balanced'`参数
+2. **深度学习方法**: 自动计算类别权重，样本少的类别获得更高权重
+3. **评估指标**: 重点关注F1-score、召回率等指标，而非仅关注准确率
+
+## 后续计划
+- 完成LSTM模型训练和评估
+- 实施数据增强技术
+- 实现集成学习方法
+- 优化超参数
+- 提升F1分数至90%
+
+## 使用方法
+
+### 环境配置
+```bash
+pip install -r requirements.txt
+```
+
+### 数据准备
+```bash
+# 合并数据文件
+python merge_data.py
+```
+
+### 运行各种分类器
+```bash
+# 朴素贝叶斯
+python run_naive_bayes.py
+
+# SVM
+python run_svm.py
+
+# 逻辑回归
+python run_logistic_regression.py
+
+# 随机森林
+python run_random_forest.py
+
+# LSTM
+python run_lstm.py
+
+# BERT (新增)
+python run_bert.py
+```
+
+### 测试模型
+```bash
+python test_naive_bayes.py
+python test_svm.py
+python test_lstm.py
+```
+
+## 依赖包
+- pandas>=1.3.0
+- numpy>=1.21.0
+- scikit-learn>=1.0.0
+- jieba>=0.42.1
+- matplotlib>=3.5.0
+- seaborn>=0.11.0
+- tensorflow>=2.8.0
+- keras>=2.8.0
+- transformers>=4.20.0
+- torch>=1.12.0
+- datasets>=2.0.0
+- accelerate>=0.12.0
+- nlpaug>=1.1.11
+- imbalanced-learn>=0.9.0 
