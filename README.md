@@ -382,21 +382,297 @@ python src/create_sample.py
   - `model_performance_comparison.png`: 模型性能对比
   - `best_model_class_performance.png`: 最佳模型各类别性能
 
-### 代码文件
+---
 
-- `src/traditional_ml_experiments.py`: 完整传统机器学习实验
-- `src/imbalance_experiment.py`: 类别不平衡处理实验
-- `src/quick_experiment.py`: 快速验证实验
+## 新架构使用方法
 
-### 运行实验
+### 项目架构概述
 
+项目已重构为模块化架构，包含以下核心组件：
+
+#### 核心模块
+- `src/experiments.py`: 统一的实验管理模块
+  - `DataProcessor`: 数据处理类
+  - `MLExperiment`: 机器学习实验类
+  - `Visualizer`: 可视化类
+- `src/run_experiments.py`: 命令行实验运行器
+- `utils/`: 工具函数包
+  - `utils/data_utils.py`: 数据处理工具
+  - `utils/model_utils.py`: 模型相关工具
+  - `utils/visualization_utils.py`: 可视化工具
+- `config/experiment_config.json`: 实验配置文件
+
+### 快速开始
+
+#### 1. 安装依赖
 ```bash
-# 快速实验（小样本）
-python src/quick_experiment.py
+pip install -r requirements.txt
+```
 
-# 类别不平衡实验（1万样本）
-python src/imbalance_experiment.py
+#### 2. 运行快速实验
+```bash
+# 使用默认配置运行快速实验
+python src/run_experiments.py --experiment quick
 
-# 完整实验（全数据集）
-python src/traditional_ml_experiments.py
-``` 
+# 指定样本数量
+python src/run_experiments.py --experiment quick --sample_size 1000
+```
+
+#### 3. 运行不平衡处理实验
+```bash
+# 运行类别不平衡实验
+python src/run_experiments.py --experiment imbalance
+
+# 指定样本数量和输出目录
+python src/run_experiments.py --experiment imbalance --sample_size 5000 --output_dir results/imbalance_test
+```
+
+#### 4. 运行完整实验
+```bash
+# 运行完整实验（使用全数据集）
+python src/run_experiments.py --experiment full
+
+# 指定自定义配置文件
+python src/run_experiments.py --experiment full --config config/custom_config.json
+```
+
+### 命令行参数
+
+#### 通用参数
+- `--experiment`: 实验类型 (`quick`, `imbalance`, `full`)
+- `--sample_size`: 样本数量（仅用于quick和imbalance实验）
+- `--output_dir`: 输出目录路径
+- `--config`: 自定义配置文件路径
+- `--random_state`: 随机种子
+- `--verbose`: 详细输出模式
+
+#### 示例用法
+```bash
+# 快速实验，1000样本，详细输出
+python src/run_experiments.py --experiment quick --sample_size 1000 --verbose
+
+# 不平衡实验，5000样本，自定义输出目录
+python src/run_experiments.py --experiment imbalance --sample_size 5000 --output_dir results/my_experiment
+
+# 完整实验，使用自定义配置
+python src/run_experiments.py --experiment full --config config/my_config.json
+```
+
+### 配置文件说明
+
+#### 默认配置 (`config/experiment_config.json`)
+```json
+{
+  "data": {
+    "data_path": "results/extracted_news_data.csv",
+    "text_column": "text",
+    "label_column": "category"
+  },
+  "preprocessing": {
+    "max_features": 10000,
+    "ngram_range": [1, 2],
+    "min_df": 2,
+    "max_df": 0.95
+  },
+  "models": {
+    "naive_bayes": {"alpha": 1.0},
+    "svm": {"C": 1.0, "class_weight": "balanced"},
+    "random_forest": {"n_estimators": 100, "class_weight": "balanced"},
+    "logistic_regression": {"C": 1.0, "class_weight": "balanced"}
+  },
+  "sampling_methods": [
+    "original", "smote", "adasyn", "borderline_smote",
+    "random_undersampling", "tomek_links", "edited_nearest_neighbours",
+    "smote_enn", "smote_tomek"
+  ],
+  "evaluation": {
+    "test_size": 0.15,
+    "val_size": 0.15,
+    "random_state": 42
+  }
+}
+```
+
+#### 自定义配置
+可以创建自定义配置文件来调整实验参数：
+```json
+{
+  "data": {
+    "data_path": "results/my_data.csv",
+    "text_column": "content",
+    "label_column": "label"
+  },
+  "preprocessing": {
+    "max_features": 5000,
+    "ngram_range": [1, 1],
+    "min_df": 5,
+    "max_df": 0.9
+  },
+  "models": {
+    "svm": {"C": 0.1, "class_weight": "balanced"},
+    "logistic_regression": {"C": 0.1, "class_weight": "balanced"}
+  },
+  "sampling_methods": ["original", "smote", "tomek_links"],
+  "evaluation": {
+    "test_size": 0.2,
+    "val_size": 0.1,
+    "random_state": 123
+  }
+}
+```
+
+### 编程接口使用
+
+#### 直接使用实验模块
+```python
+from src.experiments import MLExperiment, DataProcessor, Visualizer
+
+# 初始化数据处理器
+processor = DataProcessor(
+    data_path="results/extracted_news_data.csv",
+    text_column="text",
+    label_column="category"
+)
+
+# 加载和预处理数据
+X_train, X_val, X_test, y_train, y_val, y_test = processor.load_and_preprocess(
+    sample_size=1000,
+    test_size=0.15,
+    val_size=0.15
+)
+
+# 初始化实验
+experiment = MLExperiment(
+    models=['svm', 'logistic_regression'],
+    sampling_methods=['original', 'smote', 'tomek_links']
+)
+
+# 运行实验
+results = experiment.run_experiment(
+    X_train, X_val, X_test, y_train, y_val, y_test
+)
+
+# 可视化结果
+visualizer = Visualizer()
+visualizer.plot_results(results, save_dir="results/plots")
+```
+
+#### 使用工具函数
+```python
+from utils.data_utils import load_data, preprocess_text
+from utils.model_utils import train_model, evaluate_model
+from utils.visualization_utils import plot_confusion_matrix
+
+# 加载数据
+data = load_data("results/extracted_news_data.csv")
+
+# 预处理文本
+processed_data = preprocess_text(data, text_column="text")
+
+# 训练模型
+model = train_model(processed_data, model_type="svm")
+
+# 评估模型
+metrics = evaluate_model(model, X_test, y_test)
+
+# 可视化
+plot_confusion_matrix(y_true, y_pred, save_path="confusion_matrix.png")
+```
+
+### 输出文件
+
+实验完成后会在指定目录生成以下文件：
+
+#### 结果文件
+- `experiment_results.json`: 详细实验结果
+- `best_model.pkl`: 最佳模型文件
+- `feature_names.pkl`: 特征名称文件
+
+#### 可视化文件
+- `sampling_methods_comparison.png`: 重采样方法对比
+- `model_performance_comparison.png`: 模型性能对比
+- `best_model_class_performance.png`: 最佳模型各类别性能
+- `confusion_matrix.png`: 混淆矩阵
+
+### 扩展新功能
+
+#### 添加新模型
+```python
+# 在 config/experiment_config.json 中添加
+{
+  "models": {
+    "xgboost": {
+      "n_estimators": 100,
+      "max_depth": 6,
+      "learning_rate": 0.1
+    }
+  }
+}
+
+# 在 src/experiments.py 的 MLExperiment 类中添加
+def _get_xgboost_model(self, params):
+    from xgboost import XGBClassifier
+    return XGBClassifier(**params)
+```
+
+#### 添加新重采样方法
+```python
+# 在 config/experiment_config.json 中添加
+{
+  "sampling_methods": ["original", "smote", "new_method"]
+}
+
+# 在 src/experiments.py 的 MLExperiment 类中添加
+def _apply_new_method(self, X, y):
+    # 实现新的重采样方法
+    return X_resampled, y_resampled
+```
+
+### 故障排除
+
+#### 常见问题
+1. **内存不足**: 减少 `sample_size` 或 `max_features`
+2. **训练时间过长**: 使用更少的模型或重采样方法
+3. **配置文件错误**: 检查JSON格式和参数名称
+
+#### 调试模式
+```bash
+# 启用详细输出
+python src/run_experiments.py --experiment quick --verbose
+
+# 使用小样本快速测试
+python src/run_experiments.py --experiment quick --sample_size 100
+```
+
+### 迁移指南
+
+#### 从旧版本迁移
+1. **旧脚本**: `src/traditional_ml_experiments.py` (已弃用)
+2. **新方式**: 使用 `src/run_experiments.py --experiment full`
+3. **配置迁移**: 将参数从旧脚本复制到 `config/experiment_config.json`
+
+#### 兼容性
+- 旧的数据格式仍然支持
+- 旧的输出格式保持兼容
+- 可以逐步迁移到新架构
+
+---
+
+## 项目状态
+
+✅ **已完成功能**
+- 数据提取和预处理
+- 传统机器学习实验
+- 类别不平衡处理
+- 模块化架构重构
+- 配置驱动实验
+- 可视化工具
+
+🔄 **进行中**
+- 深度学习实验准备
+- 模型优化和调参
+
+📋 **计划中**
+- 深度学习模型（BERT, RoBERTa等）
+- 模型部署和API
+- 实时预测服务 
