@@ -141,7 +141,7 @@ class DataPreprocessor:
     
     def split_data(self, df: pd.DataFrame, text_column: str = 'content') -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
-        切分数据集为训练集、验证集、测试集
+        切分数据集为训练集、验证集、测试集（不分层采样，始终随机划分）
         
         Args:
             df: 包含文本的DataFrame
@@ -150,7 +150,7 @@ class DataPreprocessor:
         Returns:
             训练集、验证集、测试集
         """
-        logger.info(f"开始切分数据集...")
+        logger.info(f"开始切分数据集...（不分层采样，始终随机划分）")
         
         # 确保比例总和为1
         total_ratio = self.config['train_ratio'] + self.config['val_ratio'] + self.config['test_ratio']
@@ -161,38 +161,20 @@ class DataPreprocessor:
             self.config['val_ratio'] = self.config['val_ratio'] / total_ratio
             self.config['test_ratio'] = self.config['test_ratio'] / total_ratio
         
-        # 分层采样
-        if self.config['stratify'] and 'category' in df.columns:
-            # 先切分训练集和临时集
-            train_df, temp_df = train_test_split(
-                df, 
-                test_size=(1 - self.config['train_ratio']),
-                random_state=self.random_seed,
-                stratify=df['category']
-            )
-            
-            # 从临时集中切分验证集和测试集
-            val_ratio_adjusted = self.config['val_ratio'] / (self.config['val_ratio'] + self.config['test_ratio'])
-            val_df, test_df = train_test_split(
-                temp_df,
-                test_size=(1 - val_ratio_adjusted),
-                random_state=self.random_seed,
-                stratify=temp_df['category']
-            )
-        else:
-            # 不使用分层采样
-            train_df, temp_df = train_test_split(
-                df, 
-                test_size=(1 - self.config['train_ratio']),
-                random_state=self.random_seed
-            )
-            
-            val_ratio_adjusted = self.config['val_ratio'] / (self.config['val_ratio'] + self.config['test_ratio'])
-            val_df, test_df = train_test_split(
-                temp_df,
-                test_size=(1 - val_ratio_adjusted),
-                random_state=self.random_seed
-            )
+        # 随机采样切分
+        train_df, temp_df = train_test_split(
+            df, 
+            test_size=(1 - self.config['train_ratio']),
+            random_state=self.random_seed,
+            shuffle=True
+        )
+        val_ratio_adjusted = self.config['val_ratio'] / (self.config['val_ratio'] + self.config['test_ratio'])
+        val_df, test_df = train_test_split(
+            temp_df,
+            test_size=(1 - val_ratio_adjusted),
+            random_state=self.random_seed,
+            shuffle=True
+        )
         
         logger.info(f"数据集切分完成！")
         logger.info(f"训练集: {len(train_df)} 样本 ({len(train_df)/len(df)*100:.1f}%)")
