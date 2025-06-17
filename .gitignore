@@ -115,37 +115,121 @@ dmypy.json
 ehthumbs.db
 Thumbs.db
 
-# Project specific
-models/*.pkl
-models/*.safetensors
-models/*.bin
-models/*.json
-models/*.txt
-models/checkpoint-*/
-bert_news_classifier/
-logs/
-results/*.png
-results/*.jpg
-results/*.pdf
-results/*.txt
-results/*.pkl
-data/*.csv
-data/*.json
-data/*.txt
+# ===== 项目特定规则 =====
 
-# Temporary files
+# 原始数据目录 - 不上传任何原始数据
+data/
+!data/stopwords.txt
+
+# 处理结果 - 不上传大文件
+results/
+!results/.gitkeep
+
+# 模型文件
+models/
+!models/.gitkeep
+
+# 日志文件
+logs/
+!logs/.gitkeep
+
+# 大文件格式
+*.csv
+*.json
+*.txt
+*.pkl
+*.pickle
+*.joblib
+*.h5
+*.hdf5
+*.bin
+*.safetensors
+*.pt
+*.pth
+*.onnx
+*.pb
+*.tflite
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# 但保留样本文件
+!sample.csv
+
+# 临时文件
 *.tmp
 *.temp
 temp/
 tmp/
 
-# Large files
-*.h5
-*.hdf5
-*.pkl
-*.pickle
-*.joblib
+# 缓存文件
+.cache/
+cache/
 
-# 大文件
-data/news_data.csv
-data/*_news.csv 
+# 配置文件（可能包含敏感信息）
+config.ini
+config.json
+settings.json
+secrets.json
+*.key
+*.pem
+
+# 数据库文件
+*.db
+*.sqlite
+*.sqlite3
+
+# 备份文件
+*.bak
+*.backup
+*~
+
+# 压缩文件
+*.gz
+*.bz2
+*.xz
+
+# 媒体文件
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.webm
+*.mp3
+*.wav
+*.flac
+*.aac
+*.ogg
+*.wma
+
+# 文档文件
+*.pdf
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.ppt
+*.pptx
+
+# 图片文件（除非是项目必需的）
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.svg
+*.ico
+*.webp
+
+# 其他大文件
+*.iso
+*.dmg
+*.exe
+*.msi
+*.deb
+*.rpm
+*.apk 
