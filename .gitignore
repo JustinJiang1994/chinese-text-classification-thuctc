@@ -230,6 +230,9 @@ secrets.json
 !performance_distribution.png
 !best_combinations.png
 !dimension_analysis.png
+!model_performance_comparison.png
+!training_curves.png
+!model_efficiency_comparison.png
 
 # 其他大文件
 *.iso
