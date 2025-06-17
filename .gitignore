@@ -225,6 +225,12 @@ secrets.json
 *.ico
 *.webp
 
+# 但保留README.md中引用的图表文件
+!3d_heatmap.png
+!performance_distribution.png
+!best_combinations.png
+!dimension_analysis.png
+
 # 其他大文件
 *.iso
 *.dmg
