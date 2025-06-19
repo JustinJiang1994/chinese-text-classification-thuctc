@@ -295,8 +295,8 @@ class DeepLearningExperiment:
         self.vocab.build_vocab(texts)
         print(f"词汇表大小: {len(self.vocab)}")
     
-    def create_datasets(self, texts: List[str], labels: List[int]) -> Tuple[Dataset, Dataset, Dataset]:
-        """创建数据集"""
+    def create_datasets(self, texts: List[str], labels: List[int]) -> Tuple[Dataset, Dataset, Dataset, np.ndarray]:
+        """创建数据集，并返回训练集类别权重"""
         # 划分数据集
         X_train, X_temp, y_train, y_temp = train_test_split(
             texts, labels, test_size=0.3, random_state=42, stratify=labels
@@ -305,12 +305,19 @@ class DeepLearningExperiment:
             X_temp, y_temp, test_size=0.5, random_state=42, stratify=y_temp
         )
         
+        # 统计类别权重
+        y_train_arr = np.array(y_train)
+        class_sample_count = np.bincount(y_train_arr)
+        class_weight = 1.0 / (class_sample_count + 1e-6)
+        class_weight = class_weight / class_weight.sum() * len(class_sample_count)
+        class_weight = class_weight.astype(np.float32)
+        
         # 创建数据集
         train_dataset = NewsDataset(X_train, y_train, self.vocab, self.config['max_len'])
         val_dataset = NewsDataset(X_val, y_val, self.vocab, self.config['max_len'])
         test_dataset = NewsDataset(X_test, y_test, self.vocab, self.config['max_len'])
         
-        return train_dataset, val_dataset, test_dataset
+        return train_dataset, val_dataset, test_dataset, class_weight
     
     def get_model(self, model_name: str, num_classes: int) -> nn.Module:
         """获取模型"""
@@ -367,10 +374,15 @@ class DeepLearningExperiment:
         else:
             raise ValueError(f"不支持的模型: {model_name}")
     
-    def train_model(self, model: nn.Module, train_loader: DataLoader, val_loader: DataLoader) -> Dict:
-        """训练模型"""
+    def train_model(self, model: nn.Module, train_loader: DataLoader, val_loader: DataLoader, class_weight: np.ndarray = None) -> Dict:
+        """训练模型，支持类别加权"""
         model = model.to(self.device)
-        criterion = nn.CrossEntropyLoss()
+        if self.config.get('use_class_weight', False) and class_weight is not None:
+            weight_tensor = torch.tensor(class_weight, dtype=torch.float32, device=self.device)
+            criterion = nn.CrossEntropyLoss(weight=weight_tensor)
+            print(f"[类别加权] 使用类别权重: {class_weight}")
+        else:
+            criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(model.parameters(), lr=self.config['learning_rate'])
         
         best_val_loss = float('inf')
@@ -487,7 +499,7 @@ class DeepLearningExperiment:
         self.build_vocabulary(texts)
         
         # 创建数据集
-        train_dataset, val_dataset, test_dataset = self.create_datasets(texts, labels)
+        train_dataset, val_dataset, test_dataset, class_weight = self.create_datasets(texts, labels)
         
         # 创建数据加载器
         train_loader = DataLoader(train_dataset, batch_size=self.config['batch_size'], 
@@ -509,7 +521,7 @@ class DeepLearningExperiment:
             model = self.get_model(model_name, num_classes)
             
             # 训练模型
-            train_result = self.train_model(model, train_loader, val_loader)
+            train_result = self.train_model(model, train_loader, val_loader, class_weight)
             
             # 评估模型
             eval_result = self.evaluate_model(train_result['model'], test_loader)

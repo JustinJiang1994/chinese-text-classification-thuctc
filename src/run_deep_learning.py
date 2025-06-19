@@ -40,6 +40,8 @@ def main():
                        help='隐藏层维度')
     parser.add_argument('--max_len', type=int, default=100,
                        help='最大序列长度')
+    parser.add_argument('--patience', type=int, default=10,
+                       help='早停耐心值')
     parser.add_argument('--verbose', action='store_true',
                        help='详细输出')
     
@@ -72,6 +74,8 @@ def main():
         config['hidden_dim'] = args.hidden_dim
     if args.max_len:
         config['max_len'] = args.max_len
+    if args.patience:
+        config['patience'] = args.patience
     
     # 设置默认值
     defaults = {
