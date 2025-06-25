@@ -678,13 +678,14 @@ def gradual_update(old_model, new_model, update_ratio=0.1):
 - 模块化架构重构
 - 配置驱动实验
 - 可视化工具
-
-🔄 **进行中**
 - 深度学习实验准备
 - 模型优化和调参
+- 深度学习模型（BERT, RoBERTa等）
+
+🔄 **进行中**
+
 
 📋 **计划中**
-- 深度学习模型（BERT, RoBERTa等）
 - 模型部署和API
 - 实时预测服务 
 
